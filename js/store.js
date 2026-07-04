@@ -42,7 +42,33 @@ export function load() {
     state = seed();
     persist();
   }
+  migrate();
   return state;
+}
+
+// ترحيلات: إضافات لاحقة تصل للتطبيقات المثبتة بدون مساس ببيانات المستخدم
+function migrate() {
+  state.migrations ??= {};
+  if (!state.migrations.fitness1) {
+    const p = state.periods.find((x) => x.id === state.settings.activePeriodId) || state.periods[0];
+    if (p) {
+      let area = state.areas.find((a) => a.name.includes('صحة') || a.name.includes('لياقة'));
+      if (!area) {
+        area = { id: uid(), name: 'صحة ولياقة', color: '#f97316', icon: '💪' };
+        state.areas.push(area);
+      }
+      if (!state.goals.some((g) => g.title === 'النادي')) {
+        const goal = { id: uid(), periodId: p.id, areaId: area.id, title: 'النادي', unit: 'جلسة', target: 100 };
+        state.goals.push(goal);
+        state.routines.push(
+          { id: uid(), goalId: goal.id, title: 'جلسة الحديد', schedule: { perWeek: 3 }, qtyPerSession: 1, makeupPolicy: 'pace', createdAt: todayISO() },
+          { id: uid(), goalId: goal.id, title: 'تمرين كرة القدم', schedule: { perWeek: 1 }, qtyPerSession: 1, makeupPolicy: 'pace', createdAt: todayISO() },
+        );
+      }
+    }
+    state.migrations.fitness1 = true;
+    persist();
+  }
 }
 
 // بذرة أولية من أهداف المستخدم الفعلية — كلها قابلة للتعديل من داخل التطبيق
@@ -59,11 +85,13 @@ function seed() {
   };
   const aDin = { id: uid(), name: 'دين وعبادة', color: '#0e9f6e', icon: '🕌' };
   const aRead = { id: uid(), name: 'قراءة وتعلم', color: '#3b82f6', icon: '📚' };
+  const aFit = { id: uid(), name: 'صحة ولياقة', color: '#f97316', icon: '💪' };
 
   const gHifz = { id: uid(), periodId: period.id, areaId: aDin.id, title: 'حفظ القرآن', unit: 'وجه', target: 120 };
   const gTilawa = { id: uid(), periodId: period.id, areaId: aDin.id, title: 'قراءة القرآن', unit: 'وجه', target: 604 };
   const gPoems = { id: uid(), periodId: period.id, areaId: aRead.id, title: 'حفظ قصائد', unit: 'قصيدة', target: 10 };
   const gBook = { id: uid(), periodId: period.id, areaId: aRead.id, title: 'نادي قراءة الكتاب', unit: 'كتاب', target: 6 };
+  const gGym = { id: uid(), periodId: period.id, areaId: aFit.id, title: 'النادي', unit: 'جلسة', target: 100 };
 
   const routines = [
     { id: uid(), goalId: gHifz.id, title: 'ورد الحفظ اليومي', schedule: 'daily', qtyPerSession: 1, makeupPolicy: 'carry', createdAt: t },
@@ -71,13 +99,16 @@ function seed() {
     { id: uid(), goalId: gTilawa.id, title: 'ورد إضافي', schedule: { perWeek: 3 }, qtyPerSession: 4, makeupPolicy: 'pace', createdAt: t },
     { id: uid(), goalId: gPoems.id, title: 'جلسة حفظ قصائد', schedule: { perWeek: 3 }, qtyPerSession: 0, makeupPolicy: 'pace', createdAt: t },
     { id: uid(), goalId: gBook.id, title: 'جلسة قراءة الكتاب', schedule: { perWeek: 4 }, qtyPerSession: 0, makeupPolicy: 'pace', createdAt: t },
+    { id: uid(), goalId: gGym.id, title: 'جلسة الحديد', schedule: { perWeek: 3 }, qtyPerSession: 1, makeupPolicy: 'pace', createdAt: t },
+    { id: uid(), goalId: gGym.id, title: 'تمرين كرة القدم', schedule: { perWeek: 1 }, qtyPerSession: 1, makeupPolicy: 'pace', createdAt: t },
   ];
 
   return {
     version: 1,
+    migrations: { fitness1: true },
     periods: [period],
-    areas: [aDin, aRead],
-    goals: [gHifz, gTilawa, gPoems, gBook],
+    areas: [aDin, aRead, aFit],
+    goals: [gHifz, gTilawa, gPoems, gBook, gGym],
     routines,
     entries: [],
     reviews: [],

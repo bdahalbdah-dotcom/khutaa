@@ -5,7 +5,7 @@ import { todayISO, daysBetween, gregShort, n } from '../dates.js';
 import { esc, openModal, closeModal, toast } from '../ui.js';
 import { applyTheme } from '../app.js';
 
-function areaForm(area) {
+export function areaForm(area) {
   const isNew = !area;
   const modal = openModal(`
     <h2>${isNew ? 'مجال جديد' : 'تعديل المجال'}</h2>

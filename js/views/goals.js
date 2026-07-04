@@ -7,6 +7,7 @@ import {
 } from '../engine.js';
 import { gregShort, todayISO, daysBetween, n, DAY_NAMES } from '../dates.js';
 import { esc, openModal, closeModal, progressBar, toast } from '../ui.js';
+import { areaForm } from './settings.js';
 
 function paceLine(goal) {
   const p = paceInfo(goal);
@@ -225,7 +226,10 @@ export function render(el) {
     const list = goals.filter((g) => g.areaId === area.id);
     if (!list.length) continue;
     sections += `
-      <div class="section-title"><span class="dot" style="background:${area.color}"></span>${esc(area.icon || '')} ${esc(area.name)}</div>
+      <div class="section-title">
+        <span class="dot" style="background:${area.color}"></span>${esc(area.icon || '')} ${esc(area.name)}
+        <button class="btn ghost small" data-act="editArea" data-id="${area.id}" style="margin-inline-start:auto">✎</button>
+      </div>
       ${list.map(goalCard).join('')}`;
   }
 
@@ -243,14 +247,17 @@ export function render(el) {
     </div>
     ${sections || '<div class="empty">لا أهداف بعد — ابدأ بهدفك الأول 🎯</div>'}
     <button class="btn block" id="addGoal">+ هدف جديد</button>
+    <button class="btn secondary block" id="addArea" style="margin-top:8px">+ مجال جديد</button>
   `;
 
   el.onclick = (ev) => {
-    const b = ev.target.closest('[data-act], #addGoal');
+    const b = ev.target.closest('[data-act], #addGoal, #addArea');
     if (!b) return;
     if (b.id === 'addGoal') return goalForm(null);
+    if (b.id === 'addArea') return areaForm(null);
     const act = b.dataset.act;
-    if (act === 'editGoal') goalForm(state.goals.find((g) => g.id === b.dataset.id));
+    if (act === 'editArea') areaForm(state.areas.find((a) => a.id === b.dataset.id));
+    else if (act === 'editGoal') goalForm(state.goals.find((g) => g.id === b.dataset.id));
     else if (act === 'addRoutine') routineForm(null, b.dataset.id);
     else if (act === 'editRoutine') {
       const r = state.routines.find((x) => x.id === b.dataset.id);
