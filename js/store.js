@@ -71,7 +71,7 @@ function migrate() {
   }
 }
 
-// بذرة أولية من أهداف المستخدم الفعلية — كلها قابلة للتعديل من داخل التطبيق
+// بذرة أولية نظيفة: فترة ومجالات افتراضية فقط — المستخدم الجديد يبني أهدافه من شاشة الترحيب
 function seed() {
   const t = todayISO();
   const year = Number(t.slice(0, 4));
@@ -83,33 +83,17 @@ function seed() {
     startDate: firstHalf ? `${year}-01-01` : `${year}-07-01`,
     endDate: firstHalf ? `${year}-06-30` : `${year}-12-31`,
   };
-  const aDin = { id: uid(), name: 'دين وعبادة', color: '#0e9f6e', icon: '🕌' };
-  const aRead = { id: uid(), name: 'قراءة وتعلم', color: '#3b82f6', icon: '📚' };
-  const aFit = { id: uid(), name: 'صحة ولياقة', color: '#f97316', icon: '💪' };
-
-  const gHifz = { id: uid(), periodId: period.id, areaId: aDin.id, title: 'حفظ القرآن', unit: 'وجه', target: 120 };
-  const gTilawa = { id: uid(), periodId: period.id, areaId: aDin.id, title: 'قراءة القرآن', unit: 'وجه', target: 604 };
-  const gPoems = { id: uid(), periodId: period.id, areaId: aRead.id, title: 'حفظ قصائد', unit: 'قصيدة', target: 10 };
-  const gBook = { id: uid(), periodId: period.id, areaId: aRead.id, title: 'نادي قراءة الكتاب', unit: 'كتاب', target: 6 };
-  const gGym = { id: uid(), periodId: period.id, areaId: aFit.id, title: 'النادي', unit: 'جلسة', target: 100 };
-
-  const routines = [
-    { id: uid(), goalId: gHifz.id, title: 'ورد الحفظ اليومي', schedule: 'daily', qtyPerSession: 1, makeupPolicy: 'carry', createdAt: t },
-    { id: uid(), goalId: gTilawa.id, title: 'الورد اليومي', schedule: 'daily', qtyPerSession: 4, makeupPolicy: 'carry', createdAt: t },
-    { id: uid(), goalId: gTilawa.id, title: 'ورد إضافي', schedule: { perWeek: 3 }, qtyPerSession: 4, makeupPolicy: 'pace', createdAt: t },
-    { id: uid(), goalId: gPoems.id, title: 'جلسة حفظ قصائد', schedule: { perWeek: 3 }, qtyPerSession: 0, makeupPolicy: 'pace', createdAt: t },
-    { id: uid(), goalId: gBook.id, title: 'جلسة قراءة الكتاب', schedule: { perWeek: 4 }, qtyPerSession: 0, makeupPolicy: 'pace', createdAt: t },
-    { id: uid(), goalId: gGym.id, title: 'جلسة الحديد', schedule: { perWeek: 3 }, qtyPerSession: 1, makeupPolicy: 'pace', createdAt: t },
-    { id: uid(), goalId: gGym.id, title: 'تمرين كرة القدم', schedule: { perWeek: 1 }, qtyPerSession: 1, makeupPolicy: 'pace', createdAt: t },
-  ];
-
   return {
     version: 1,
     migrations: { fitness1: true },
     periods: [period],
-    areas: [aDin, aRead, aFit],
-    goals: [gHifz, gTilawa, gPoems, gBook, gGym],
-    routines,
+    areas: [
+      { id: uid(), name: 'دين وعبادة', color: '#0e9f6e', icon: '🕌' },
+      { id: uid(), name: 'قراءة وتعلم', color: '#3b82f6', icon: '📚' },
+      { id: uid(), name: 'صحة ولياقة', color: '#f97316', icon: '💪' },
+    ],
+    goals: [],
+    routines: [],
     entries: [],
     reviews: [],
     settings: {
@@ -118,6 +102,7 @@ function seed() {
       lastBackupDate: null,
       lastOpenedDate: t,
       installDate: t,
+      onboarded: false,
     },
   };
 }

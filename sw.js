@@ -1,6 +1,6 @@
 // Service Worker: cache-first للعمل بدون إنترنت، مع تحديث بالإصدار
 
-const VERSION = 'khutaa-v2';
+const VERSION = 'khutaa-v3';
 
 const ASSETS = [
   './',
