@@ -8,6 +8,7 @@ import {
 import { gregShort, todayISO, daysBetween, n, DAY_NAMES } from '../dates.js';
 import { esc, openModal, closeModal, progressBar, toast } from '../ui.js';
 import { areaForm } from './settings.js';
+import { parts, partAt, partById, fmtTime } from '../dayparts.js';
 
 function paceLine(goal) {
   const p = paceInfo(goal);
@@ -15,6 +16,13 @@ function paceLine(goal) {
   if (p.status === 'ahead') return '<span class="pace ahead">متقدم على المسار 🚀</span>';
   if (p.status === 'on') return '<span class="pace on">على المسار ✓</span>';
   return `<span class="pace behind">تحتاج ${n(Math.ceil(p.neededPerWeek))} ${esc(goal.unit)} أسبوعيًا لتلحق</span>`;
+}
+
+// وقت الورد: «🌇 العصر ٣:٠٠» أو «🌇 العصر» أو «⏱ أي وقت»
+function timeLabel(r) {
+  const p = r.partId ? partById(r.partId) : null;
+  if (!p) return '⏱ أي وقت';
+  return `${p.icon} ${esc(p.name)}${r.at ? ` ${fmtTime(r.at)}` : ''}`;
 }
 
 function goalCard(goal) {
@@ -41,7 +49,7 @@ function goalCard(goal) {
       <div class="routine-row">
         <div class="grow">
           <b>${esc(r.title)}</b>
-          <div class="muted small">${scheduleLabel(r)}${r.qtyPerSession > 0 ? ` · ${n(r.qtyPerSession)} ${esc(goal.unit)}/جلسة` : ''} · ${POLICY_LABELS[r.makeupPolicy]}</div>
+          <div class="muted small">${timeLabel(r)} · ${scheduleLabel(r)}${r.qtyPerSession > 0 ? ` · ${n(r.qtyPerSession)} ${esc(goal.unit)}/جلسة` : ''} · ${POLICY_LABELS[r.makeupPolicy]}</div>
         </div>
         ${c ? `<span class="badge soft">التزام ${n(Math.round(c.pct * 100))}٪</span>` : ''}
         <button class="btn ghost small" data-act="editRoutine" data-id="${r.id}">✎</button>
@@ -106,6 +114,17 @@ export function routineForm(routine, goalId) {
         <input type="text" name="title" required value="${esc(routine?.title || '')}" placeholder="مثال: ورد الحفظ اليومي">
       </label>
       ${scheduleFields(routine)}
+      <div class="row">
+        <label class="field">وقت اليوم
+          <select name="part">
+            <option value="" ${!routine?.partId ? 'selected' : ''}>⏱ أي وقت</option>
+            ${parts().map((p) => `<option value="${p.id}" ${routine?.partId === p.id ? 'selected' : ''}>${p.icon} ${esc(p.name)}</option>`).join('')}
+          </select>
+        </label>
+        <label class="field">ساعة محددة (اختياري)
+          <input type="time" name="at" value="${esc(routine?.at || '')}">
+        </label>
+      </div>
       <label class="field">الكمية لكل جلسة (٠ = جلسة بلا عدّاد)
         <input type="number" name="qty" min="0" step="0.5" value="${routine?.qtyPerSession ?? 1}">
       </label>
@@ -126,9 +145,14 @@ export function routineForm(routine, goalId) {
   modal.querySelector('#rForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const f = e.target;
+    const at = f.at.value || null;
+    // الساعة المحددة تُرجّح: تُشتقّ منها الفترة تلقائيًا
+    const partId = at ? partAt(at).id : (f.part.value || null);
     const data = {
       title: f.title.value.trim(),
       schedule: readSchedule(f),
+      partId,
+      at,
       qtyPerSession: Math.max(Number(f.qty.value) || 0, 0),
       makeupPolicy: f.policy.value,
     };
@@ -137,6 +161,14 @@ export function routineForm(routine, goalId) {
         s.routines.push({ id: uid(), goalId, createdAt: todayISO(), ...data });
       } else {
         Object.assign(s.routines.find((r) => r.id === routine.id), data);
+        // بنود اليوم فما بعده تتبع الوقت الجديد
+        const t = todayISO();
+        for (const en of s.entries) {
+          if (en.routineId === routine.id && !en.makeupFor && en.date >= t) {
+            en.partId = partId;
+            en.at = at;
+          }
+        }
       }
     });
     closeModal(modal.querySelector('.modal'));

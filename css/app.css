@@ -81,31 +81,121 @@ h3 { font-size: .95rem; font-weight: 700; }
 }
 .section-title .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
 
-/* ---------- صفوف المهام ---------- */
+/* ---------- صفوف المهام: الصف كله هدف لمس واحد ---------- */
 .item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px;
+  display: flex; align-items: center; gap: 12px;
+  min-height: 58px;
+  padding: 12px 14px;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   margin-bottom: 8px;
+  cursor: pointer; user-select: none;
 }
+.item:active { background: var(--card2); }
+.item.done { background: var(--card2); }
 .item.done .title { text-decoration: line-through; color: var(--muted); }
 .item.makeup { border-color: var(--amber); background: linear-gradient(0deg, var(--amber-bg) 0%, var(--card) 140%); }
 .item .body { flex: 1; min-width: 0; }
-.item .title { font-weight: 600; font-size: .95rem; }
-.item .sub { color: var(--muted); font-size: .76rem; }
+.item .title { font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 7px; }
+.item .sub { color: var(--muted); font-size: .78rem; }
+.item .adot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.item .at {
+  flex: none; font-size: .82rem; font-weight: 700;
+  color: var(--accent); background: var(--accent-soft);
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+}
+.item.done .at { color: var(--muted); background: transparent; }
+.more-btn {
+  flex: none; width: 34px; height: 34px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--muted);
+  font-size: 1.1rem; font-weight: 700; cursor: pointer; line-height: 1;
+}
+.more-btn:active { background: var(--card2); }
 
 .check {
-  width: 26px; height: 26px; flex: none;
+  width: 34px; height: 34px; flex: none;
   border: 2px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--card);
   display: grid; place-items: center;
-  font-size: 15px; color: var(--on-accent);
-  cursor: pointer;
+  font-size: 19px; color: var(--on-accent);
 }
 .item.done .check { background: var(--accent); border-color: var(--accent); }
+
+/* ---------- فترات اليوم ---------- */
+.today-head { margin-bottom: 16px; }
+.today-head .row-top { display: flex; align-items: baseline; justify-content: space-between; }
+.today-head .tally { font-weight: 700; font-size: 1rem; color: var(--accent); }
+.today-head .dates { color: var(--muted); font-size: .8rem; margin-top: 6px; }
+.today-head .hijri { color: var(--accent); }
+.daybar { height: 6px; border-radius: 999px; background: var(--card2); overflow: hidden; margin-top: 8px; }
+.daybar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .25s ease; }
+
+.part { margin-bottom: 10px; }
+.part-head {
+  width: 100%; display: flex; align-items: center; gap: 9px;
+  padding: 12px 14px; min-height: 52px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: .95rem; font-weight: 700; color: var(--text);
+  cursor: pointer; text-align: start;
+}
+.part.open .part-head { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; margin-bottom: -1px; }
+.part.now .part-head { border-color: var(--accent); background: var(--accent-soft); }
+.part-head .ico { font-size: 1.15rem; line-height: 1; }
+.part-head .pname { flex: 1; }
+.part-head .nowtag {
+  background: var(--accent); color: var(--on-accent);
+  font-size: .68rem; padding: 2px 9px; border-radius: 999px;
+}
+.part-head .pcount { color: var(--muted); font-size: .82rem; }
+.part-head .pcount.full { color: var(--green); }
+.part-head .chev { color: var(--muted); font-size: .9rem; }
+.part-range { color: var(--muted); font-size: .74rem; padding: 8px 14px 2px; }
+.part-empty { color: var(--muted); font-size: .84rem; padding: 12px 14px 14px; }
+
+/* ---------- القضاء المطوي ---------- */
+.makeups { margin-bottom: 12px; }
+.makeup-head {
+  width: 100%; display: flex; align-items: center; gap: 9px;
+  padding: 12px 14px; min-height: 50px;
+  background: var(--amber-bg); color: var(--amber);
+  border: 1px solid var(--amber); border-radius: var(--radius);
+  font-family: inherit; font-size: .9rem; font-weight: 700;
+  cursor: pointer; text-align: start;
+}
+.makeups.open .makeup-head { border-radius: var(--radius) var(--radius) 0 0; margin-bottom: 6px; }
+.makeup-head span:first-child { flex: 1; }
+.makeup-head .mcount {
+  background: var(--amber); color: var(--amber-bg);
+  min-width: 24px; text-align: center; padding: 1px 7px; border-radius: 999px; font-size: .78rem;
+}
+
+/* ---------- ورقة تفاصيل البند ---------- */
+.sheet-qty { display: flex; align-items: center; gap: 12px; margin: 6px 0 4px; }
+.sheet-qty button { flex: none; width: 52px; height: 48px; font-size: 1.3rem; }
+.sheet-qty .val { flex: 1; text-align: center; font-size: 1.15rem; font-weight: 700; }
+
+/* ---------- تبويب المزيد ---------- */
+.more-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 14px; margin-bottom: 10px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  text-decoration: none; color: var(--text);
+}
+.more-row .ico { font-size: 1.5rem; line-height: 1; }
+.more-row .body { flex: 1; display: flex; flex-direction: column; }
+.more-row .name { font-weight: 700; font-size: .98rem; }
+.more-row .desc { color: var(--muted); font-size: .76rem; }
+.more-row .chev { color: var(--muted); font-size: 1.2rem; }
+
+/* أوقات الفترات في الإعدادات */
+.part-time { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.part-time .ico { font-size: 1.1rem; }
+.part-time .nm { flex: 1; font-size: .9rem; font-weight: 700; }
+.part-time input { flex: none; width: auto; }
 
 .badge {
   display: inline-block; padding: 0 8px; border-radius: 999px;
@@ -170,9 +260,10 @@ label.field > * { margin-top: 4px; font-weight: 400; }
 .row { display: flex; gap: 8px; }
 .row > * { flex: 1; }
 
-.quick-add { display: flex; gap: 8px; margin-top: 10px; }
+.quick-add { display: flex; gap: 8px; margin-top: 16px; }
 .quick-add input { flex: 1; }
 .quick-add .btn { flex: none; }
+.quick-add .btn.ghost { border: 1px dashed var(--line); padding: 12px; }
 
 .day-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
 .day-chips .chip {
@@ -190,14 +281,14 @@ nav.bottom {
 }
 nav.bottom .inner {
   max-width: 640px; margin: 0 auto;
-  display: grid; grid-template-columns: repeat(6, 1fr);
+  display: grid; grid-template-columns: repeat(4, 1fr);
 }
 nav.bottom a {
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
-  padding: 8px 0 6px; text-decoration: none;
-  color: var(--muted); font-size: .64rem; font-weight: 700;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 9px 0 7px; text-decoration: none;
+  color: var(--muted); font-size: .72rem; font-weight: 700;
 }
-nav.bottom a .ico { font-size: 1.15rem; line-height: 1.2; }
+nav.bottom a .ico { font-size: 1.3rem; line-height: 1.2; }
 nav.bottom a.active { color: var(--accent); }
 
 /* ---------- الأسبوع ---------- */

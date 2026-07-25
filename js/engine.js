@@ -4,6 +4,7 @@ import { state, silently, update, uid } from './store.js';
 import {
   todayISO, addDays, dayOfWeek, weekStartOf, weekDates, daysBetween, n,
 } from './dates.js';
+import { nowHM, currentPartId } from './dayparts.js';
 
 // ---------- استعلامات أساسية ----------
 
@@ -80,7 +81,8 @@ export function ensureDay(iso) {
       additions.push({
         id: uid(), date: iso, routineId: r.id, goalId: g.id,
         title: r.title, qty: r.qtyPerSession, done: false, waived: false,
-        makeupFor: null, doneAt: null, note: '',
+        makeupFor: null, doneAt: null, doneTime: null, note: '',
+        partId: r.partId ?? null, at: r.at ?? null,
       });
     }
   }
@@ -159,7 +161,8 @@ export function waiveWeekMakeup(routineId, weekStart) {
     s.entries.push({
       id: uid(), date: todayISO(), routineId, goalId: r.goalId,
       title: r.title, qty: 0, done: false, waived: true,
-      makeupFor: weekStart, doneAt: null, note: '',
+      makeupFor: weekStart, doneAt: null, doneTime: null, note: '',
+      partId: null, at: null,
     });
   });
 }
@@ -179,7 +182,8 @@ export function waiveAllMakeups() {
           s.entries.push({
             id: uid(), date: todayISO(), routineId: r.id, goalId: r.goalId,
             title: r.title, qty: 0, done: false, waived: true,
-            makeupFor: sf.weekStart, doneAt: null, note: '',
+            makeupFor: sf.weekStart, doneAt: null, doneTime: null, note: '',
+            partId: null, at: null,
           });
         }
       }
@@ -219,6 +223,7 @@ export function dayItems(iso) {
       items.push({
         kind: 'perweek', routine: r, goal: g, entry: todayEntry || null,
         weekDone: doneCount, weekTarget: r.schedule.perWeek,
+        partId: r.partId ?? null, at: r.at ?? null,
       });
     }
   }
@@ -256,6 +261,7 @@ export function toggleEntry(id) {
     if (!e) return;
     e.done = !e.done;
     e.doneAt = e.done ? todayISO() : null;
+    e.doneTime = e.done ? nowHM() : null;
     if (e.done) e.waived = false;
   });
 }
@@ -274,7 +280,8 @@ export function logPerWeek(routineId, iso) {
     s.entries.push({
       id: uid(), date: iso, routineId, goalId: r.goalId, title: r.title,
       qty: r.qtyPerSession, done: true, waived: false, makeupFor: null,
-      doneAt: todayISO(), note: '',
+      doneAt: todayISO(), doneTime: nowHM(), note: '',
+      partId: r.partId ?? null, at: r.at ?? null,
     });
   });
 }
@@ -292,17 +299,36 @@ export function logWeekMakeup(routineId, weekStart) {
     s.entries.push({
       id: uid(), date: todayISO(), routineId, goalId: r.goalId,
       title: r.title, qty: r.qtyPerSession, done: true, waived: false,
-      makeupFor: weekStart, doneAt: todayISO(), note: '',
+      makeupFor: weekStart, doneAt: todayISO(), doneTime: nowHM(), note: '',
+      partId: null, at: null,
     });
   });
 }
 
-export function addManualEntry(iso, title, goalId = null, qty = 0) {
+export function addManualEntry(iso, title, goalId = null, qty = 0, partId = currentPartId()) {
   update((s) => {
     s.entries.push({
       id: uid(), date: iso, routineId: null, goalId, title, qty,
-      done: false, waived: false, makeupFor: null, doneAt: null, note: '',
+      done: false, waived: false, makeupFor: null, doneAt: null, doneTime: null,
+      note: '', partId, at: null,
     });
+  });
+}
+
+// إسناد الورد لفترة/ساعة — والبنود المولَّدة من اليوم فصاعدًا تتبع الوقت الجديد
+export function setRoutineTime(routineId, partId, at = null) {
+  const t = todayISO();
+  update((s) => {
+    const r = s.routines.find((x) => x.id === routineId);
+    if (!r) return;
+    r.partId = partId || null;
+    r.at = at || null;
+    for (const e of s.entries) {
+      if (e.routineId === routineId && !e.makeupFor && e.date >= t) {
+        e.partId = r.partId;
+        e.at = r.at;
+      }
+    }
   });
 }
 
@@ -317,7 +343,8 @@ export function bumpGoal(goalId, qty) {
     s.entries.push({
       id: uid(), date: todayISO(), routineId: null, goalId,
       title: `+${qty} ${g.unit}`, qty, done: true, waived: false,
-      makeupFor: null, doneAt: todayISO(), note: '',
+      makeupFor: null, doneAt: todayISO(), doneTime: nowHM(), note: '',
+      partId: currentPartId(), at: null,
     });
   });
 }

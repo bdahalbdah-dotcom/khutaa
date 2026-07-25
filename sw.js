@@ -1,6 +1,6 @@
 // Service Worker: cache-first للعمل بدون إنترنت، مع تحديث بالإصدار
 
-const VERSION = 'khutaa-v3';
+const VERSION = 'khutaa-v4';
 
 const ASSETS = [
   './',
@@ -12,8 +12,10 @@ const ASSETS = [
   'js/store.js',
   'js/engine.js',
   'js/dates.js',
+  'js/dayparts.js',
   'js/ui.js',
   'js/views/today.js',
+  'js/views/more.js',
   'js/views/week.js',
   'js/views/goals.js',
   'js/views/stats.js',

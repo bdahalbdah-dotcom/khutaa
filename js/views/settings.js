@@ -4,6 +4,7 @@ import { state, update, uid, exportJSON, importJSON } from '../store.js';
 import { todayISO, daysBetween, gregShort, n } from '../dates.js';
 import { esc, openModal, closeModal, toast } from '../ui.js';
 import { applyTheme } from '../app.js';
+import { parts, DEFAULT_PARTS, toMinutes } from '../dayparts.js';
 
 export function areaForm(area) {
   const isNew = !area;
@@ -121,6 +122,18 @@ export function render(el) {
     </div>
 
     <div class="card">
+      <h2>أوقات اليوم</h2>
+      <p class="muted small">أوقات تقريبية لترتيب أورادك — عدّلها بما يناسب مواقيتك. تمتد كل فترة إلى بداية التي تليها.</p>
+      ${parts().map((p) => `
+        <div class="part-time">
+          <span class="ico">${p.icon}</span>
+          <span class="nm">${esc(p.name)}</span>
+          <input type="time" data-part="${p.id}" value="${esc(p.start)}">
+        </div>`).join('')}
+      <button class="btn ghost small" id="resetParts">إعادة الأوقات الافتراضية</button>
+    </div>
+
+    <div class="card">
       <h2>مجالات الحياة</h2>
       ${state.areas.map((a) => `
         <div class="mini-item">
@@ -152,6 +165,23 @@ export function render(el) {
   el.querySelector('#theme').addEventListener('change', (e) => {
     update((st) => { st.settings.theme = e.target.value; });
     applyTheme();
+  });
+
+  // تغيير وقت فترة: يُحفظ فورًا وتُعاد الفترات مرتّبة زمنيًا
+  el.querySelectorAll('input[data-part]').forEach((inp) => {
+    inp.addEventListener('change', () => {
+      if (!inp.value) { inp.value = state.settings.dayParts.find((p) => p.id === inp.dataset.part).start; return; }
+      update((st) => {
+        const p = st.settings.dayParts.find((x) => x.id === inp.dataset.part);
+        if (p) p.start = inp.value;
+        st.settings.dayParts.sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+      });
+    });
+  });
+
+  el.querySelector('#resetParts').addEventListener('click', () => {
+    update((st) => { st.settings.dayParts = DEFAULT_PARTS.map((p) => ({ ...p })); });
+    toast('أُعيدت الأوقات الافتراضية');
   });
 
   el.querySelector('#exportBtn').addEventListener('click', () => {

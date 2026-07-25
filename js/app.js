@@ -11,8 +11,14 @@ import * as goals from './views/goals.js';
 import * as stats from './views/stats.js';
 import * as reviews from './views/reviews.js';
 import * as settings from './views/settings.js';
+import * as more from './views/more.js';
+import { currentPartId } from './dayparts.js';
 
-const routes = { today, week, goals, stats, reviews, settings };
+const routes = {
+  today, week, goals, stats, reviews, settings, more,
+};
+// الشاشات الفرعية تُبرز تبويب «المزيد»
+const NAV_OF = { stats: 'more', reviews: 'more', settings: 'more' };
 let current = 'today';
 
 export function applyTheme() {
@@ -27,8 +33,9 @@ function rerender() {
   const fresh = old.cloneNode(false);
   old.replaceWith(fresh);
   routes[current].render(fresh);
+  const navRoute = NAV_OF[current] || current;
   document.querySelectorAll('nav.bottom a').forEach((a) => {
-    a.classList.toggle('active', a.dataset.route === current);
+    a.classList.toggle('active', a.dataset.route === navRoute);
   });
 }
 
@@ -120,10 +127,20 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   });
 }
 
-// إعادة رسم شاشة اليوم عند العودة للتطبيق في يوم جديد
+// إعادة الرسم عند تغيّر اليوم أو تغيّر فترة اليوم — حتى لا يبقى وسم «الآن» على فترة فائتة
+let seenPart = currentPartId();
+
+function refreshIfStale() {
+  const newDay = state.settings.lastOpenedDate !== todayISO();
+  const newPart = currentPartId() !== seenPart;
+  if (!newDay && !newPart) return;
+  seenPart = currentPartId();
+  if (newDay) backfill();
+  rerender();
+}
+
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && state.settings.lastOpenedDate !== todayISO()) {
-    backfill();
-    rerender();
-  }
+  if (document.visibilityState === 'visible') refreshIfStale();
 });
+
+setInterval(refreshIfStale, 60000);

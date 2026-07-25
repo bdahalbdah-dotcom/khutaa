@@ -1,6 +1,7 @@
 // الحالة المركزية: localStorage + بذرة أولية + تصدير/استيراد
 
 import { todayISO } from './dates.js';
+import { DEFAULT_PARTS } from './dayparts.js';
 
 const KEY = 'khutaa-state-v1';
 
@@ -69,6 +70,15 @@ function migrate() {
     state.migrations.fitness1 = true;
     persist();
   }
+
+  // فترات اليوم: الأوراد القديمة تهبط في «أي وقت» ويوزّعها المستخدم من شاشة اليوم
+  if (!state.migrations.dayparts1) {
+    state.settings.dayParts ??= DEFAULT_PARTS.map((p) => ({ ...p }));
+    for (const r of state.routines) { r.partId ??= null; r.at ??= null; }
+    for (const e of state.entries) { e.partId ??= null; e.at ??= null; e.doneTime ??= null; }
+    state.migrations.dayparts1 = true;
+    persist();
+  }
 }
 
 // بذرة أولية نظيفة: فترة ومجالات افتراضية فقط — المستخدم الجديد يبني أهدافه من شاشة الترحيب
@@ -85,7 +95,7 @@ function seed() {
   };
   return {
     version: 1,
-    migrations: { fitness1: true },
+    migrations: { fitness1: true, dayparts1: true },
     periods: [period],
     areas: [
       { id: uid(), name: 'دين وعبادة', color: '#0e9f6e', icon: '🕌' },
@@ -98,6 +108,7 @@ function seed() {
     reviews: [],
     settings: {
       theme: 'auto',
+      dayParts: DEFAULT_PARTS.map((p) => ({ ...p })),
       activePeriodId: period.id,
       lastBackupDate: null,
       lastOpenedDate: t,
@@ -126,6 +137,7 @@ export function importJSON(file, onDone) {
         throw new Error('صيغة غير صحيحة');
       }
       state = data;
+      migrate(); // نسخة قديمة قد تفتقد فترات اليوم
       persist();
       onDone(null);
     } catch (e) {
